@@ -477,11 +477,11 @@ proc andnot_si*(a: m128i, b: m128i): m128i
   {.importc: "_mm_andnot_si128", header: "emmintrin.h".}
   ## Exposes _mm_andnot_si128 intrinsics
 
-proc or_si128*(a: m128i, b: m128i): m128i
+proc or_si*(a: m128i, b: m128i): m128i
   {.importc: "_mm_or_si128", header: "emmintrin.h".}
   ## Exposes _mm_or_si128 intrinsics
 
-proc xor_si128*(a: m128i, b: m128i): m128i
+proc xor_si*(a: m128i, b: m128i): m128i
   {.importc: "_mm_xor_si128", header: "emmintrin.h".}
   ## Exposes _mm_xor_si128 intrinsics
 

@@ -572,13 +572,25 @@ template floor_ps_epi32*(a: m128) : m128i =
   var result:m128i
   let resultArr = cast[ptr array[0..0,int32]](result)
   for i in 0 .. 4:
-    var xi : int32 = int32(arr[i])
+    var xi = int32(arr[i])
     resultArr[i] = 
       if arr[i] < float(xi):
           xi - 1'i32
       else:
           xi
   result
+
+  
+proc i32gather_epi32*(base: ptr int32, vindex: m128i, scale: int32) : m128i =
+  var result:m128i
+  let resultArr = cast[ptr array[0..0,int32]](result)
+  let vindexArr = cast[ptr array[0..0,int32]](vindex)
+  let baseArr = cast[ptr array[0..0,int32]](base)
+
+  for i in 0 .. 4:        
+    resultArr[i] = baseArr[vindexArr[i]]
+
+  return result
 
 
 # Assert we generate proper C code

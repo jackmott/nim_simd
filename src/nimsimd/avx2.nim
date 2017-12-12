@@ -285,7 +285,7 @@ proc mul_epu32*(a: m256i, b: m256i): m256i
   {.importc: "_mm256_mul_epu32", header: "immintrin.h".}
   ## Exposes _mm256_mul_epu32 intrinsics
 
-proc or_si256*(a: m256i, b: m256i): m256i
+proc or_si*(a: m256i, b: m256i): m256i
   {.importc: "_mm256_or_si256", header: "immintrin.h".}
   ## Exposes _mm256_or_si256 intrinsics
 
@@ -621,7 +621,7 @@ proc mask_i32gather_epi32*(def_vals: m256i, base: ptr int32, vindex: m256i, vmas
   {.importc: "_mm256_mask_i32gather_epi32", header: "immintrin.h".}
   ## Exposes _mm256_mask_i32gather_epi32 intrinsics
 
-proc i32gather_epi32*(base: ptr int32, vindex: m128i, scale: int32): m128i
+proc i32gather_epi32_128*(base: ptr int32, vindex: m128i, scale: int32): m128i
   {.importc: "_mm_i32gather_epi32", header: "immintrin.h".}
   ## Exposes _mm_i32gather_epi32 intrinsics
 
