@@ -8,7 +8,7 @@ or near optimum SIMD instructions being used at runtime according to the users h
 * At *compile time* the macro will produce all desired simd versions of the block.  sse, sse2, avx, and so on
 * At *run time* the simd instructions available on the computer will be detected, and the appropriate version of the code block will be executed
 
-# Progress So far:
+# Progress So Far:
 
 See simd.nim for the proof of concept so far.  Already you can write code like this successfully:
 
