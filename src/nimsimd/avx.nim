@@ -14,6 +14,7 @@ when someGcc:
   {.passC: "-msse3 -mssse3 -msse4 -mavx".}
   {.passL: "-msse3 -mssse3 -msse4 -mavx".}
 
+const width* = 4
 type m128* {.importc: "__m128", header: "xmmintrin.h".} = object
 type m128d* {.importc: "__m128d", header: "emmintrin.h".} = object
 type m128i* {.importc: "__m128i", header: "emmintrin.h".} = object

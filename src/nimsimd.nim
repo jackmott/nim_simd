@@ -107,21 +107,17 @@ macro SIMD_SSE2(body:untyped): untyped =
 
 
 # width will be replaced with the width of the SIMD vector in bytes
-template SIMD(lane_width_bytes:untyped,body:untyped) =
+template SIMD(body:untyped) =
                     
     if cpuType == UNINITIALIZED:
         cpuType = getCPUType()
         echo "Detected cpu type:" & $cpuType        
-         
-
-    var lane_width_bytes:int
+             
     # instead of calling different macros, is there a way to pass the string?
     # I tried this and got odd compile errors
-    if cpuType == SSE2:
-        lane_width_bytes = 16        
+    if cpuType == SSE2:    
         SIMD_SSE2(body)
-    elif cpuType == AVX2:
-        lane_width_bytes = 32
+    elif cpuType == AVX2:        
         SIMD_AVX2(body)
 
 
@@ -179,7 +175,7 @@ when isMainModule:
         0'i32, 0'i32, 3'i32, 9'i32, 8'i32, 3'i32, 6'i32, 6'i32, 11'i32, 1'i32, 0'i32, 0'i32
     ]
     
-    SIMD(w2):
+    SIMD:
         let F3 = simd.set1_ps(1.0'f32/3.0'f32)    
         let G3 = simd.set1_ps(1.0'f32 / 6.0'f32)
         let G32 = simd.set1_ps((1.0'f32 / 6.0'f32) * 2.0'f32)
@@ -270,9 +266,9 @@ when isMainModule:
     
         
 
-    SIMD(width):     
-        echo "SIMD lane width in bytes:" & $width    
-        for i in countup(0,<a.len,width div 4):
+    SIMD:     
+        echo "SIMD lane width in bytes:" & $simd.width    
+        for i in countup(0,<a.len,simd.width div 4):
             let av = simd.loadu_ps(addr a[i])
             let bv = simd.loadu_ps(addr b[i])
             let rv = simd.add_ps(av,bv)
