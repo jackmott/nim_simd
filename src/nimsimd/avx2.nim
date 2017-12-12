@@ -73,11 +73,11 @@ proc adds_epu16*(a: m256i, b: m256i): m256i
   {.importc: "_mm256_adds_epu16", header: "immintrin.h".}
   ## Exposes _mm256_adds_epu16 intrinsics
 
-proc and_si256*(a: m256i, b: m256i): m256i
+proc and_si*(a: m256i, b: m256i): m256i
   {.importc: "_mm256_and_si256", header: "immintrin.h".}
   ## Exposes _mm256_and_si256 intrinsics
 
-proc andnot_si256*(a: m256i, b: m256i): m256i
+proc andnot_si*(a: m256i, b: m256i): m256i
   {.importc: "_mm256_andnot_si256", header: "immintrin.h".}
   ## Exposes _mm256_andnot_si256 intrinsics
 

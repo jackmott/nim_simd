@@ -13,8 +13,9 @@ when someGcc:
   {.passC: "-msse2".}
   {.passL: "-msse2".}
 
+
 type m128d* {.importc: "__m128d", header: "emmintrin.h".} = object
-type m128i* {.importc: "__m128i", header: "emmintrin.h".} = object
+
 
 proc add_sd*(a: m128d, b: m128d): m128d
   {.importc: "_mm_add_sd", header: "emmintrin.h".}
@@ -468,11 +469,11 @@ proc subs_epu16*(a: m128i, b: m128i): m128i
   {.importc: "_mm_subs_epu16", header: "emmintrin.h".}
   ## Exposes _mm_subs_epu16 intrinsics
 
-proc and_si128*(a: m128i, b: m128i): m128i
+proc and_si*(a: m128i, b: m128i): m128i
   {.importc: "_mm_and_si128", header: "emmintrin.h".}
   ## Exposes _mm_and_si128 intrinsics
 
-proc andnot_si128*(a: m128i, b: m128i): m128i
+proc andnot_si*(a: m128i, b: m128i): m128i
   {.importc: "_mm_andnot_si128", header: "emmintrin.h".}
   ## Exposes _mm_andnot_si128 intrinsics
 
@@ -785,7 +786,7 @@ proc castpd_ps*(a: m128d): m128
   {.importc: "_mm_castpd_ps", header: "emmintrin.h".}
   ## Exposes _mm_castpd_ps intrinsics
 
-proc castpd_si128*(a: m128d): m128i
+proc castpd_si*(a: m128d): m128i
   {.importc: "_mm_castpd_si128", header: "emmintrin.h".}
   ## Exposes _mm_castpd_si128 intrinsics
 
@@ -793,7 +794,7 @@ proc castps_pd*(a: m128): m128d
   {.importc: "_mm_castps_pd", header: "emmintrin.h".}
   ## Exposes _mm_castps_pd intrinsics
 
-proc castps_si128*(a: m128): m128i
+proc castps_si*(a: m128): m128i
   {.importc: "_mm_castps_si128", header: "emmintrin.h".}
   ## Exposes _mm_castps_si128 intrinsics
 

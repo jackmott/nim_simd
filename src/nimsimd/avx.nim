@@ -8,16 +8,20 @@
 #
 #
 
-include sse2
+const someGcc = defined(gcc) or defined(llvm_gcc) or defined(clang)
 
 when someGcc:
   {.passC: "-msse3 -mssse3 -msse4 -mavx".}
   {.passL: "-msse3 -mssse3 -msse4 -mavx".}
 
-
+type m128* {.importc: "__m128", header: "xmmintrin.h".} = object
+type m128d* {.importc: "__m128d", header: "emmintrin.h".} = object
+type m128i* {.importc: "__m128i", header: "emmintrin.h".} = object
 type m256* {.importc: "__m256", header: "immintrin.h".} = object
 type m256d* {.importc: "__m256d", header: "immintrin.h".} = object
 type m256i* {.importc: "__m256i", header: "immintrin.h".} = object
+
+type mf32* = m256 
 
 proc add_pd*(a: m256d, b: m256d): m256d
   {.importc: "_mm256_add_pd", header: "immintrin.h".}
@@ -361,7 +365,7 @@ proc loadu_pd_256*(p: ptr float64): m256d
   {.importc: "_mm256_loadu_pd", header: "immintrin.h".}
   ## Exposes _mm256_loadu_pd intrinsics
 
-proc loadu_ps_256*(p: ptr float32): m256
+proc loadu_ps*(p: ptr float32): m256
   {.importc: "_mm256_loadu_ps", header: "immintrin.h".}
   ## Exposes _mm256_loadu_ps intrinsics
 
@@ -502,11 +506,11 @@ proc set1_pd_256*(w: float64): m256d
   {.importc: "_mm256_set1_pd", header: "immintrin.h".}
   ## Exposes _mm256_set1_pd intrinsics
 
-proc set1_ps_256*(w: float32): m256
+proc set1_ps*(w: float32): m256
   {.importc: "_mm256_set1_ps", header: "immintrin.h".}
   ## Exposes _mm256_set1_ps intrinsics
 
-proc set1_epi32_256*(i: int32): m256i
+proc set1_epi32*(i: int32): m256i
   {.importc: "_mm256_set1_epi32", header: "immintrin.h".}
   ## Exposes _mm256_set1_epi32 intrinsics
 
@@ -534,7 +538,7 @@ proc castpd_ps*(a: m256d): m256
   {.importc: "_mm256_castpd_ps", header: "immintrin.h".}
   ## Exposes _mm256_castpd_ps intrinsics
 
-proc castpd_si256*(a: m256d): m256i
+proc castpd_si*(a: m256d): m256i
   {.importc: "_mm256_castpd_si256", header: "immintrin.h".}
   ## Exposes _mm256_castpd_si256 intrinsics
 
@@ -542,7 +546,7 @@ proc castps_pd*(a: m256): m256d
   {.importc: "_mm256_castps_pd", header: "immintrin.h".}
   ## Exposes _mm256_castps_pd intrinsics
 
-proc castps_si256*(a: m256): m256i
+proc castps_si*(a: m256): m256i
   {.importc: "_mm256_castps_si256", header: "immintrin.h".}
   ## Exposes _mm256_castps_si256 intrinsics
 
@@ -717,3 +721,20 @@ const CMP_GE_OQ* = 0x1d # Greater-than-or-equal (ordered, non-signaling)
 const CMP_GT_OQ* = 0x1e # Greater-than (ordered, non-signaling)
 const CMP_TRUE_US* = 0x1f # True (unordered, signaling)
 
+## Falbacks
+
+# Floor and convert to int in one go
+template floor_ps_epi32*(a: m256) : m256i = 
+  cvtps_epi32(floor_ps(a))
+
+# Greater than or equal with same conventions as SSE
+template cmpge_ps*(a,b:m256) : m256 =
+  cmp_ps(a,b,CMP_GE_OQ)
+
+# Greater than with same conventions as SSE
+template cmpgt_ps*(a,b:m256) : m256 = 
+  cmp_ps(a,b,CMP_GT_OQ)
+
+# Less than with same conventions as SSE
+template cmplt_ps*(a,b:m256) : m256 =
+  cmp_ps(a,b,CMP_LT_OQ)

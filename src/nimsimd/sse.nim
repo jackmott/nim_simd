@@ -6,6 +6,7 @@
 #    See the file copying.txt, included in this
 #    distribution, for details about the copyright.
 #
+import mmx
 
 const someGcc = defined(gcc) or defined(llvm_gcc) or defined(clang)
 when someGcc:
@@ -15,8 +16,10 @@ when someGcc:
 # MSVC does not support MMX on 64 bits target
 const vcc64Bits = defined(vcc) and defined(x86_64)
 
-import mmx
+
 type m128* {.importc: "__m128", header: "xmmintrin.h".} = object
+type m128i* {.importc: "__m128i", header: "emmintrin.h".} = object
+type mf32* = m128
 
 proc add_ss*(a: m128, b: m128): m128
   {.importc: "_mm_add_ss", header: "xmmintrin.h".}
@@ -267,7 +270,7 @@ proc cvtt_ss2si*(a: m128): int32
   ## Exposes _mm_cvtt_ss2si intrinsics
 
 when not vcc64Bits:
-  proc cvtps_pi32*(a: m128): m64
+  proc cvtps_epi32*(a: m128): m64
     {.importc: "_mm_cvtps_pi32", header: "xmmintrin.h".}
     ## Exposes _mm_cvtps_pi32 intrinsics
 
@@ -275,7 +278,7 @@ when not vcc64Bits:
     {.importc: "_mm_cvt_ps2pi", header: "xmmintrin.h".}
     ## Exposes _mm_cvt_ps2pi intrinsics
 
-  proc cvttps_pi32*(a: m128): m64
+  proc cvttps_epi32*(a: m128): m64
     {.importc: "_mm_cvttps_pi32", header: "xmmintrin.h".}
     ## Exposes _mm_cvttps_pi32 intrinsics
 
@@ -315,7 +318,7 @@ when not vcc64Bits:
     {.importc: "_mm_cvtps_pi8", header: "xmmintrin.h".}
     ## Exposes _mm_cvtps_pi8 intrinsics
 
-  proc cvtpi32_ps*(a: m128, b: m64): m128
+  proc cvtepi32_ps*(a: m128, b: m64): m128
     {.importc: "_mm_cvtpi32_ps", header: "xmmintrin.h".}
     ## Exposes _mm_cvtpi32_ps intrinsics
 
@@ -561,6 +564,23 @@ proc set_flush_zero_mode*(x: int32) {.inline.} =
 proc set_rounding_mode*(x: int32) {.inline.} =
   setcsr((getcsr() and not ROUND_MASK) or x)
 
+## Fallbacks
+# Floor and convert to int in one go
+template floor_ps_epi32*(a: m128) : m128i = 
+  
+  let arr = cast[ptr array[0..0,float32]](a)
+  var result:m128i
+  let resultArr = cast[ptr array[0..0,int32]](result)
+  for i in 0 .. 4:
+    var xi : int32 = int32(arr[i])
+    resultArr[i] = 
+      if arr[i] < float(xi):
+          xi - 1'i32
+      else:
+          xi
+  result
+
+
 # Assert we generate proper C code
 when isMainModule:
   var myint32 : int32 = 1;
@@ -577,11 +597,11 @@ when isMainModule:
     var mym64 = set1_pi32(1)
     var argm64 = set1_pi32(1)
     var argptrm64 = addr(argm64)
-    mym64 = cvtps_pi32(argm128)
+    mym64 = cvtps_epi32(argm128)
     mym64 = cvt_ps2pi(argm128)
-    mym64 = cvttps_pi32(argm128)
+    mym64 = cvttps_epi32(argm128)
     mym64 = cvtt_ps2pi(argm128)
-    mym128 = cvtpi32_ps(argm128, argm64)
+    mym128 = cvtepi32_ps(argm128, argm64)
     mym128 = cvt_pi2ps(argm128, argm64)
     mym128 = loadh_pi(argm128,  argptrm64)
     mym128 = loadl_pi(argm128,  argptrm64)
