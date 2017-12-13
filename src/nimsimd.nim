@@ -121,7 +121,26 @@ template SIMD(body:untyped) =
         SIMD_AVX2(body)
 
 
-when isMainModule:         
+when isMainModule:   
+
+    
+    var gradX = [
+        1'f32,-1'f32, 1'f32,-1'f32,
+        1'f32,-1'f32, 1'f32,-1'f32,
+        0'f32, 0'f32, 0'f32, 0'f32]    
+
+    var gradY = [    
+        1'f32, 1'f32,-1'f32,-1'f32,
+        0'f32, 0'f32, 0'f32, 0'f32,
+        1'f32,-1'f32, 1'f32,-1'f32]
+    
+
+    var gradZ = [
+    
+        0'f32, 0'f32, 0'f32, 0'f32,
+        1'f32, 1'f32,-1'f32,-1'f32,
+        1'f32, 1'f32,-1'f32,-1'f32]
+    
     var perm = [        
         151'i32,160'i32,137'i32,91'i32,90'i32,15'i32,
         131'i32,13'i32,201'i32,95'i32,96'i32,53'i32,194'i32,233'i32,7'i32,225'i32,140'i32,36'i32,103'i32,30'i32,69'i32,142'i32,8'i32,99'i32,37'i32,240'i32,21'i32,10'i32,23'i32,
@@ -183,6 +202,16 @@ when isMainModule:
         let ONE = simd.set1_epi32(1)
         let FF = simd.set1_epi32(0xff)
         let ONEF = simd.set1_ps(1.0'f32)
+        let PSIX = simd.set1_ps(0.6'f32)
+        let ZERO = simd.set1_ps(0'f32)
+        let THIRTY_TWO = simd.set1_ps(32.0'f32)
+
+        proc dotSIMD(x1,y1,z1,x2,y2,z2:simd.mf32) : simd.mf32 =         
+            let xx = simd.mul_ps(x1, x2)
+            let yy = simd.mul_ps(y1, y2)
+            let zz = simd.mul_ps(z1, z2)
+            return simd.add_ps(xx,simd.add_ps(yy,zz))
+                                                
 
         proc simplexNoise(x,y,z: simd.mf32) : simd.mf32 = 
             let s = simd.mul_ps(F3,simd.add_ps(x,simd.add_ps(y,z)))
@@ -220,7 +249,7 @@ when isMainModule:
             let z1 = simd.add_ps(simd.sub_ps(z0,simd.cvtepi32_ps(k1)),G3)
             let x2 = simd.add_ps(simd.sub_ps(x0,simd.cvtepi32_ps(i2)),G32)
             let y2 = simd.add_ps(simd.sub_ps(y0,simd.cvtepi32_ps(j2)),G32)
-            let zz = simd.add_ps(simd.sub_ps(z0,simd.cvtepi32_ps(k2)),G32)
+            let z2 = simd.add_ps(simd.sub_ps(z0,simd.cvtepi32_ps(k2)),G32)
             let x3 = simd.add_ps(simd.sub_ps(x0,ONEF),G33)
             let y3 = simd.add_ps(simd.sub_ps(y0,ONEF),G33)
             let z3 = simd.add_ps(simd.sub_ps(z0,ONEF),G33)
@@ -244,17 +273,53 @@ when isMainModule:
             let gi2 = simd.i32gather_epi32(permMOD12[0].unsafeAddr,simd.add_epi32(i2,simd.add_epi32(ii,pjjj2)),4)
             let gi3 = simd.i32gather_epi32(permMOD12[0].unsafeAddr,simd.add_epi32(ONE,simd.add_epi32(ii,pjj1)),4)
 
-            
+            let gi0x = simd.i32gather_ps(gradX[0].unsafeAddr,gi0,4)
+            let gi0y = simd.i32gather_ps(gradY[0].unsafeAddr,gi0,4)
+            let gi0z = simd.i32gather_ps(gradZ[0].unsafeAddr,gi0,4)
 
+            let gi1x = simd.i32gather_ps(gradX[0].unsafeAddr,gi1,4)
+            let gi1y = simd.i32gather_ps(gradY[0].unsafeAddr,gi1,4)
+            let gi1z = simd.i32gather_ps(gradZ[0].unsafeAddr,gi1,4)
 
-            let p = simd.set1_ps(1.0'f32)
-            return p 
+            let gi2x = simd.i32gather_ps(gradX[0].unsafeAddr,gi2,4)
+            let gi2y = simd.i32gather_ps(gradY[0].unsafeAddr,gi2,4)
+            let gi2z = simd.i32gather_ps(gradZ[0].unsafeAddr,gi2,4)
 
-          
+            let gi3x = simd.i32gather_ps(gradX[0].unsafeAddr,gi3,4)
+            let gi3y = simd.i32gather_ps(gradY[0].unsafeAddr,gi3,4)
+            let gi3z = simd.i32gather_ps(gradZ[0].unsafeAddr,gi3,4)
 
+            let t0 = simd.sub_ps(simd.sub_ps(simd.sub_ps(PSIX,simd.mul_ps(x0,x0)),simd.mul_ps(y0,y0)),simd.mul_ps(z0,z0))
+            let t1 = simd.sub_ps(simd.sub_ps(simd.sub_ps(PSIX,simd.mul_ps(x1,x1)),simd.mul_ps(y1,y1)),simd.mul_ps(z1,z1))
+            let t2 = simd.sub_ps(simd.sub_ps(simd.sub_ps(PSIX,simd.mul_ps(x2,x2)),simd.mul_ps(y2,y2)),simd.mul_ps(z2,z2))
+            let t3 = simd.sub_ps(simd.sub_ps(simd.sub_ps(PSIX,simd.mul_ps(x3,x3)),simd.mul_ps(y3,y3)),simd.mul_ps(z3,z3))
 
-        
+            var t0q = simd.mul_ps(t0,t0)
+            t0q = simd.mul_ps(t0q,t0q)
+            var t1q = simd.mul_ps(t1,t1)
+            t1q = simd.mul_ps(t1q,t1q)
+            var t2q = simd.mul_ps(t2,t2)
+            t2q = simd.mul_ps(t2q,t2q)
+            var t3q = simd.mul_ps(t3,t3)
+            t3q = simd.mul_ps(t3q,t3q)
 
+            var n0 = simd.mul_ps(t0q,dotSIMD(gi0x,gi0y,gi0z,x0,y0,z0))
+            var n1 = simd.mul_ps(t1q,dotSIMD(gi1x,gi1y,gi1z,x1,y1,z1))
+            var n2 = simd.mul_ps(t2q,dotSIMD(gi2x,gi2y,gi2z,x2,y2,z2))
+            var n3 = simd.mul_ps(t3q,dotSIMD(gi3x,gi3y,gi3z,x3,y3,z3))
+
+            var cond = simd.cmplt_ps(t0,ZERO)
+            n0 = simd.blendv_ps(n0,ZERO,cond)  
+            cond = simd.cmplt_ps(t1,ZERO)
+            n1 = simd.blendv_ps(n1,ZERO,cond)
+            cond = simd.cmplt_ps(t2,ZERO)
+            n2 = simd.blendv_ps(n2,ZERO,cond)
+            cond = simd.cmplt_ps(t3,ZERO)
+            n3 = simd.blendv_ps(n3,ZERO,cond)
+
+            return simd.mul_ps(THIRTY_TWO,simd.add_ps(n0,simd.add_ps(n1,simd.add_ps(n2,n3))))
+
+                  
     var
         a = newSeq[float32](16)
         b = newSeq[float32](16) 

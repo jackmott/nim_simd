@@ -14,7 +14,7 @@ when someGcc:
   {.passL: "-msse2".}
 
 
-type m128d* {.importc: "__m128d", header: "emmintrin.h".} = object
+
 
 
 proc add_sd*(a: m128d, b: m128d): m128d

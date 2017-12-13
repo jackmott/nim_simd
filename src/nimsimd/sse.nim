@@ -19,6 +19,7 @@ const vcc64Bits = defined(vcc) and defined(x86_64)
 const width* = 4 
 type m128* {.importc: "__m128", header: "xmmintrin.h".} = object
 type m128i* {.importc: "__m128i", header: "emmintrin.h".} = object
+type m128d* {.importc: "__m128d", header: "emmintrin.h".} = object
 type mf32* = m128
 
 proc add_ss*(a: m128, b: m128): m128
@@ -580,7 +581,7 @@ template floor_ps_epi32*(a: m128) : m128i =
           xi
   result
 
-  
+# SSE has not father so we fallback to scalar
 proc i32gather_epi32*(base: ptr int32, vindex: m128i, scale: int32) : m128i =
   var result:m128i
   let resultArr = cast[ptr array[0..0,int32]](result)
@@ -591,6 +592,22 @@ proc i32gather_epi32*(base: ptr int32, vindex: m128i, scale: int32) : m128i =
     resultArr[i] = baseArr[vindexArr[i]]
 
   return result
+
+# SSE has not father so we fallback to scalar
+proc i32gather_ps*(base: ptr float32, vindex: m128i, scale: int32) : m128 =
+  var result:m128
+  let resultArr = cast[ptr array[0..0,float32]](result)
+  let vindexArr = cast[ptr array[0..0,int32]](vindex)
+  let baseArr = cast[ptr array[0..0,float32]](base)
+
+  for i in 0 .. 4:        
+    resultArr[i] = baseArr[vindexArr[i]]
+
+  return result
+
+# SSE has not blendv but we can accomplish it with simd bitwise operators
+template blendv_ps*(a, b, c : m128) : m128 =
+  or_ps(andnot_ps(c,a),and_ps(c,b))
 
 
 # Assert we generate proper C code
