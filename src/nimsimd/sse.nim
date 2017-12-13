@@ -16,7 +16,9 @@ when someGcc:
 # MSVC does not support MMX on 64 bits target
 const vcc64Bits = defined(vcc) and defined(x86_64)
 
-const width* = 4 
+#Width in bytes
+const width* = 16 
+
 type m128* {.importc: "__m128", header: "xmmintrin.h".} = object
 type m128i* {.importc: "__m128i", header: "emmintrin.h".} = object
 type m128d* {.importc: "__m128d", header: "emmintrin.h".} = object

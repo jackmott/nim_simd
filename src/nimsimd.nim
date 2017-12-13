@@ -213,11 +213,13 @@ when isMainModule:
                                                 
 
         proc simplexNoise(x,y,z: simd.mf32) : simd.mf32 = 
+            echo "a"
             let s = simd.mul_ps(F3,simd.add_ps(x,simd.add_ps(y,z)))
             let i = simd.floor_ps_epi32(simd.add_ps(x,s))
             let j = simd.floor_ps_epi32(simd.add_ps(y,s))
             let k = simd.floor_ps_epi32(simd.add_ps(z,s))
          
+            echo "b"
             let t = simd.mul_ps(simd.cvtepi32_ps(simd.add_epi32(i,simd.add_epi32(j,k))),G3)
             let X0 = simd.sub_ps(simd.cvtepi32_ps(i),t)
             let Y0 = simd.sub_ps(simd.cvtepi32_ps(j),t)
@@ -226,10 +228,12 @@ when isMainModule:
             let y0 = simd.sub_ps(y,Y0)
             let z0 = simd.sub_ps(z,Z0) 
 
+            echo "b"
             let i1 = simd.and_si(ONE,simd.and_si(simd.castps_si(simd.cmpge_ps(x0,y0)),simd.castps_si(simd.cmpge_ps(x0,z0))))
             let j1 = simd.and_si(ONE,simd.and_si(simd.castps_si(simd.cmpgt_ps(y0,x0)),simd.castps_si(simd.cmpgt_ps(y0,z0))))
             let k1 = simd.and_si(ONE,simd.and_si(simd.castps_si(simd.cmpgt_ps(z0,x0)),simd.castps_si(simd.cmpgt_ps(z0,y0))))
 
+            echo "c"
             let yx_xz = simd.and_si(simd.castps_si(simd.cmpge_ps(x0,y0)),simd.castps_si(simd.cmplt_ps(x0,z0)))
             let zx_xy = simd.and_si(simd.castps_si(simd.cmpge_ps(x0,z0)),simd.castps_si(simd.cmplt_ps(x0,y0)))
 
@@ -315,32 +319,31 @@ when isMainModule:
             n2 = simd.blendv_ps(n2,ZERO,cond)
             cond = simd.cmplt_ps(t3,ZERO)
             n3 = simd.blendv_ps(n3,ZERO,cond)
-
+            echo "z"
             return simd.mul_ps(THIRTY_TWO,simd.add_ps(n0,simd.add_ps(n1,simd.add_ps(n2,n3))))
 
-                  
-    var
-        a = newSeq[float32](16)
-        b = newSeq[float32](16) 
-        r = newSeq[float32](16)
-
-    for i,v in a:
-        a[i] = float32(i)
-        b[i] = 2.0'f32
-    
         
+                  
+        var
+            a = newSeq[float32](16)            
+            r = newSeq[float32](16)
 
-    SIMD:     
+        for i,v in a:
+            a[i] = float32(i)            
+        
+            
         echo "SIMD lane width in bytes:" & $simd.width    
         for i in countup(0,<a.len,simd.width div 4):
-            let av = simd.loadu_ps(addr a[i])
-            let bv = simd.loadu_ps(addr b[i])
-            let rv = simd.add_ps(av,bv)
-            simd.storeu_ps(addr r[i],rv)
+            echo "1"
+            var av = simd.loadu_ps(addr a[i])
+            echo "2"
+            av = simd.add_ps(av,av)
+            let noise = simplexNoise(av,av,av)            
+            echo "3"
+            simd.storeu_ps(addr r[i],av)
 
-    echo a
-    echo b
-    echo r
+        echo a        
+        echo r
 
     
     
