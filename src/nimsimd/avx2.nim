@@ -582,8 +582,8 @@ proc mask_i32gather_pd*(def_vals: m256d, base: ptr float64, vindex: m128i, vmask
   ## Exposes _mm256_mask_i32gather_pd intrinsics
 
 proc i32gather_ps*(base: ptr float32, vindex: m256i, scale: int32): m256
-  {.importc: "_mm_i32gather_ps", header: "immintrin.h".}
-  ## Exposes _mm_i32gather_pd intrinsics
+  {.importc: "_mm256_i32gather_ps", header: "immintrin.h".}
+  ## Exposes _mm_i32gather_ps intrinsics
 
 proc i32gather_pd_128*(base: ptr float64, vindex: m128i, scale: int32): m128d
   {.importc: "_mm_i32gather_pd", header: "immintrin.h".}

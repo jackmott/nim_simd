@@ -135,8 +135,7 @@ when isMainModule:
         1'f32,-1'f32, 1'f32,-1'f32]
     
 
-    var gradZ = [
-    
+    var gradZ = [    
         0'f32, 0'f32, 0'f32, 0'f32,
         1'f32, 1'f32,-1'f32,-1'f32,
         1'f32, 1'f32,-1'f32,-1'f32]
@@ -297,7 +296,7 @@ when isMainModule:
             var t0q = simd.mul_ps(t0,t0)
             t0q = simd.mul_ps(t0q,t0q)
             var t1q = simd.mul_ps(t1,t1)
-            t1q = simd.mul_ps(t1q,t1q)
+            t1q = simd.mul_ps(t1q,t1q) 
             var t2q = simd.mul_ps(t2,t2)
             t2q = simd.mul_ps(t2q,t2q)
             var t3q = simd.mul_ps(t3,t3)
