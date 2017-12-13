@@ -23,8 +23,8 @@ for i,v in a:
     b[i] = 2.0'f32
 
 
-SIMD(width):     
-    for i in countup(0,<a.len,width div 4):
+SIMD:     
+    for i in countup(0,<a.len,simd.width div 4):
         let av = simd.loadu_ps(addr a[i])
         let bv = simd.loadu_ps(addr b[i])
         let rv = simd.add_ps(av,bv)
