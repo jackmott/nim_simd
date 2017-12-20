@@ -14,9 +14,6 @@ when someGcc:
   {.passL: "-msse2".}
 
 
-
-
-
 proc add_sd*(a: m128d, b: m128d): m128d
   {.importc: "_mm_add_sd", header: "emmintrin.h".}
   ## Exposes _mm_add_sd intrinsics

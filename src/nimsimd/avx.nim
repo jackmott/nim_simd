@@ -7,9 +7,7 @@
 #    distribution, for details about the copyright.
 #
 #
-
-const someGcc = defined(gcc) or defined(llvm_gcc) or defined(clang)
-
+import sse
 when someGcc:
   {.passC: "-msse3 -mssse3 -msse4 -mavx".}
   {.passL: "-msse3 -mssse3 -msse4 -mavx".}

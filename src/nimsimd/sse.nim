@@ -8,13 +8,12 @@
 #
 import mmx
 
-const someGcc = defined(gcc) or defined(llvm_gcc) or defined(clang)
+const someGcc* = defined(gcc) or defined(llvm_gcc) or defined(clang)
 when someGcc:
   {.passC: "-msse".}
   {.passL: "-msse".}
 
-# MSVC does not support MMX on 64 bits target
-const vcc64Bits = defined(vcc) and defined(x86_64)
+
 
 #Width in bytes
 const width* = 16 

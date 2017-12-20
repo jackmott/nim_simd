@@ -8,7 +8,7 @@
 #
 
 # MSVC does not support MMX on 64 bits target
-const vcc64Bits = defined(vcc) and defined(x86_64)
+const vcc64Bits* = defined(vcc) and defined(x86_64)
 
 when not vcc64Bits:
   type m64* {.importc: "__m64", header: "mmintrin.h".} = object
