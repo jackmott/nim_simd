@@ -584,7 +584,6 @@ template floor_ps_epi32*(a: m128) : m128i =
 
 # SSE has not father so we fallback to scalar
 proc i32gather_epi32*(base: ptr int32, vindex: m128i, scale: int32) : m128i =
-  var result:m128i
   let resultArr = cast[ptr array[0..0,int32]](result)
   let vindexArr = cast[ptr array[0..0,int32]](vindex)
   let baseArr = cast[ptr array[0..0,int32]](base)
@@ -596,7 +595,6 @@ proc i32gather_epi32*(base: ptr int32, vindex: m128i, scale: int32) : m128i =
 
 # SSE has not father so we fallback to scalar
 proc i32gather_ps*(base: ptr float32, vindex: m128i, scale: int32) : m128 =
-  var result:m128
   let resultArr = cast[ptr array[0..0,float32]](result)
   let vindexArr = cast[ptr array[0..0,int32]](vindex)
   let baseArr = cast[ptr array[0..0,float32]](base)

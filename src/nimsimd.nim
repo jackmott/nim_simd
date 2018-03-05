@@ -85,13 +85,15 @@ proc getCPUType() : CPU_TYPE =
     return AVX512
 
 
-proc replaceSIMD(node:NimNode, simdType:string, vectorSize:string) =            
+proc replaceSIMD(node:NimNode, simdType:string, vectorSize:string) =           
+    var simdIdent = toNimIdent("simd")
+    var simdTypeIdent = toNimIdent(simdType)
     for node in node.children:
         #echo $node.kind
         if node.kind == nnkIdent:
            #echo $node.ident
-           if node.ident == !"simd":
-                node.ident = !simdType
+           if node.ident == simdIdent:
+                node.ident = simdTypeIdent
                 break  #only want to check for ident simd on first ident
         replaceSIMD(node,simdType,vectorsize)
 

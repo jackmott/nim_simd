@@ -13,7 +13,7 @@ for i,v in a:
 
 SIMD:
     echo "SIMD lane width in bytes:" & $simd.width    
-    for i in countup(0,<a.len,simd.width div 4):    
+    for i in countup(0,pred(a.len),simd.width div 4):    
         var av = simd.loadu_ps(addr a[i])    
         var bv = simd.loadu_ps(addr b[i])
         var rv = simd.add_ps(av,bv)   
