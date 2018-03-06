@@ -48,7 +48,7 @@ else:
 when defined(vcc) or defined(icc):
     proc xgetbv(x:int) :int64 =
         return c_xgetbv(x)
-elif defined(gcc):
+elif defined(gcc) or defined(clang):
     proc xgetbv(x:int) :int64 =
         var a,d: uint32
         {.emit"""            
