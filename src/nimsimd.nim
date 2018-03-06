@@ -9,86 +9,138 @@ import rdstdin
 proc cpuidex(cpuInfo:ptr int,function_id:cint,subfunction_id:cint)
     {.importc:"__cpuidex", header:"intrin.h"}
 
-proc cpuid_count(level,count,a,b,c,d:cint)
-    {.importc:"__cpuid_count", header:"cpuid.h"}
-
 proc c_xgetbv(xcr:cuint) : uint64
     {.importc:"_xgetbv", header:"immintrin.h"}
 
 
-when defined(Windows):
-    proc cpuid(outarray:openarray[int32],x:int32) =
-        cpuidex(cast[ptr int32](outarray[0].unsafeAddr),x.cint,0)
-
-    proc xgetbv(x:uint) : uint64 =
-        c_xgetbv(x.cuint)
-else:
-    proc cpuid*(outarray:openarray[int32],x:int32) =
-        cpuid_count(x.cint,0,outarray[0].cint,outarray[1].cint,outarray[2].cint,outarray[3].cint)
-
-    proc xgetbv(index:uint) : uint64 = 
+when defined(vcc) or defined(icc) :
+    proc cpuid(outarray:openarray[int32],functionNumber:int32) =
+        cpuidex(cast[ptr int32](outarray[0].unsafeAddr),functionNumber.cint,0)
+    
+elif defined(gcc) or defined(clang):        
+    proc cpuid(outarray:openarray[int32],functionNumber:int32) =
         {.emit:"""
-        unsigned eax, edx;
-        __asm__ __volatile__("xgetbv" : "=a"(eax), "=d"(edx) : "c"(index));
-        return ((unsigned long)edx << 32) | eax;
-        """.}
+            int a, b, c, d;
+            __asm("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(functionNumber), "c"(0) : );
+            outarray[0] = a;
+            outarray[1] = b;
+            outarray[2] = c;
+            outarray[3] = d;
+        """.}    
 
-const XCR_FEATURE_ENABLED_MASK = 0        
+else:     
+    proc cpuid(outarray:openarray[int32],functionNumber:int32) =
+        {.emit"""
+            __asm
+            {
+                mov eax, functionNumber
+                xor ecx, ecx
+                cpuid;
+                mov esi, outarray
+                    mov[esi], eax
+                    mov[esi + 4], ebx
+                    mov[esi + 8], ecx
+                    mov[esi + 12], edx
+             }
+        ."""}
+
+
+when defined(vcc) or defined(icc):
+    proc xgetbv(x:int) :int64 =
+        return c_xgetbv(x)
+elif defined(gcc):
+    proc xgetbv(x:int) :int64 =
+        var a,d: uint32
+        {.emit"""            
+            __asm( "xgetbv" : "=a"(a), "=d"(d) : "c"(x) : );           
+        """.}
+        return (a.uint64() or (d.uint64() shl 32)).int64()
+else:
+    proc xgetbv(x:int) :int64 =
+        var a,d: uint32
+        {.emit"""            
+            __asm {
+                mov ecx, ctr
+                _emit 0x0f
+                _emit 0x01
+                _emit 0xd0; // xgetbv
+                mov a, eax
+                    mov d, edx
+            }            
+        """.}
+        return (a.uint64() or (d.uint64() shl 32)).int64()
+
+
 
 type CPU_TYPE = enum
-        UNINITIALIZED,NO_SIMD,SSE2,SSE41,AVX2,AVX512,NEON
+        UNINITIALIZED,NO_SIMD,SSE2,SSE41,AVX2
 
 var cpuType = UNINITIALIZED
 
 proc getCPUType() : CPU_TYPE =
+    
     var cpuInfo = newSeq[int32](4)
     cpuid(cpuInfo,0)
     let nIds = cpuInfo[0]
 
-    if nIds < 0x00000001:
+    if nIds == 0:
         return NO_SIMD
     
-    cpuid(cpuInfo,0x00000001)
+    cpuid(cpuInfo,1)
 
-    if (cpuInfo[3] and 1 shl 26) == 0:
+    if (cpuInfo[3] and (1 shl 0)) == 0:
         return NO_SIMD
+    if (cpuInfo[3] and (1 shl 23)) == 0:
+        return NO_SIMD
+    if (cpuInfo[3] and (1 shl 15)) == 0:
+        return NO_SIMD
+    if (cpuInfo[3] and (1 shl 24)) == 0:
+        return NO_SIMD
+    if (cpuInfo[3] and (1 shl 25)) == 0:
+        return NO_SIMD
+    if (cpuInfo[3] and (1 shl 26)) == 0:
+        return NO_SIMD  #actually has SSE be we only support SSE2 and up for now
 
-    if (cpuInfo[2] and 1 shl 19) == 0:
+    
+
+    if (cpuInfo[2] and (1 shl 0)) == 0:
         return SSE2
 
-    var cpuXSaveSupport = (cpuInfo[2] and 1 shl 26) != 0
-    var osAVXSupport = (cpuInfo[2] and 1 shl 27) != 0
-    var cpuAVXSupport = (cpuInfo[2] and 1 shl 28) != 0
+    if (cpuInfo[2] and (1 shl 9)) == 0:
+        return SSE2  #actually ahs SSE3 but we are not that granular for now
+    if (cpuInfo[2] and (1 shl 19)) == 0:
+        return SSE2  #actually ahs SSSE3 but we are not that granular for now
 
-    if cpuXSaveSupport and osAVXSupport and cpuAVXSupport:
-        var xcrFeatureMask = xgetbv(XCR_FEATURE_ENABLED_MASK)
-        if (xcrFeatureMask and 0x6) != 0x6:
-            return SSE41
-    else:
-        return SSE41
-
-    if nIds < 0x00000007:
-        return SSE41
-
-    var cpuFMA3Support = (cpuInfo[2] and 1 shl 12) != 0    
-    cpuid(cpuInfo,0x00000007)
-    var cpuAVX2Support = (cpuInfo[1] and 1 shl 5) != 0
-
-    if not cpuFMA3Support or not cpuAVX2Support:
-        return SSE41
-
-    var cpuAVX512Support = (cpuInfo[1] and 1 shl 16) != 0
-    var oxAVX512Support = (xgetbv(XCR_FEATURE_ENABLED_MASK) and 0xe6) == 0xe6
-
-    if not cpuAVX512Support or not oxAVX512Support:
-        return AVX2
-    return AVX512
+    if (cpuInfo[2] and (1 shl 23)) == 0:
+        return SSE41  #no popcount
+    if (cpuInfo[2] and (1 shl 20)) == 0:
+        return SSE41 #no sse4.2
+    
+    if (cpuInfo[2] and (1 shl 26)) == 0:
+        return SSE41  #actually ahs SSE42 but we are not that granular for now
+    if (cpuInfo[2] and (1 shl 27)) == 0:
+        return SSE41  #actually ahs SSE42 but we are not that granular for now
+    if (cpuInfo[2] and (1 shl 28)) == 0:
+        return SSE41  #actually ahs SSE42 but we are not that granular for now
+        
+    if (xgetbv(0) and 6) != 6:
+        return SSE41 #AVX not enabled in OS
 
 
-proc replaceSIMD(node:NimNode, simdType:string, vectorSize:string) =           
+    cpuid(cpuInfo,7)
+    if (cpuInfo[1] and (1 shl 5)) == 0:
+        return SSE41 #actually avx but we are not that granual yet
+    
+    return AVX2
+
+    
+   
+
+
+proc replaceSIMD(rootNode:NimNode, simdType:string, vectorSize:string) =           
     var simdIdent = toNimIdent("simd")
     var simdTypeIdent = toNimIdent(simdType)
-    for node in node.children:
+    for node in rootNode.children:
         #echo $node.kind
         if node.kind == nnkIdent:
            #echo $node.ident
