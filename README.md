@@ -42,7 +42,7 @@ echo r
 a call to a blend instruction on SSE2 would need to be converted to  Or(AndNot(z,x), And(z,y)).  In some cases fallbacks may be degenerate or impossible. Compiler warnings? Errors?
 * The ability to loop over arrays of a given type should be made as simple as possible. We should provide some abstraction via the macro such that you can do something like `for i,v in myArray` and
 it will convert to iterate over the array at the appropriate stride length. Perhaps doing the loads automatically.  But I would like to give the user as much control as possible for performance.
-* Runetime cost needs to be kept very near 0. The whole point of SIMD is to extract as much performance as possible from the hardware
+* Runtime cost needs to be kept very near 0. The whole point of SIMD is to extract as much performance as possible from the hardware
 
 # Help Needed
 
