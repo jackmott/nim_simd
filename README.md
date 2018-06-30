@@ -2,7 +2,7 @@
 
 This is an experiment / proof of concept to use Nim's metaprogramming to provide an easy to use SIMD abstraction layer. 
 The goal is for users of the library to be able to write blocks of code containing SIMD intrinsics *one time* and end up with optimum
-or near optimum SIMD instructions being used at runtime according to the users hardware. If you are interested in this, you may be interesting in my other Rust library, which is a more complete version of the same idea: [SIMDeez](https://github.com/jackmott/simdeez)
+or near optimum SIMD instructions being used at runtime according to the users hardware. If you are interested in this, you may be interested in my other Rust library, which is a more complete version of the same idea: [SIMDeez](https://github.com/jackmott/simdeez)
 
 How this will work:
 
